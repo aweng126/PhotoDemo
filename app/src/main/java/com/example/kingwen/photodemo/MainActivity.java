@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -12,6 +13,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
 import java.io.File;
 import java.io.IOException;
@@ -93,7 +95,10 @@ public class MainActivity extends AppCompatActivity {
 
                 imgUri=Uri.fromFile(outputImage);
 
-              
+                Intent intent=new Intent("android.media.action.IMAGE_CAPTURE");
+                intent.putExtra(MediaStore.EXTRA_OUTPUT,imgUri);
+                startActivityForResult(intent,TAKE_PHOTO);
+
 
 
             }
@@ -125,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
                             .skipMemoryCache(true)
 
                             //跳过硬盘缓存
-                            //.diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
 
                             .centerCrop()
 
@@ -133,6 +138,36 @@ public class MainActivity extends AppCompatActivity {
 
 
                 }
+                break;
+            case TAKE_PHOTO:
+                if(resultCode==RESULT_OK){
+                    Log.e("MainActivity Takephoto ", imgUri + "");
+                    Intent intent =new Intent("com.android.camera.action.CROP");
+                    intent.setDataAndType(imgUri,"image/*");
+                    intent.putExtra("scale", true);
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT,imgUri);
+                    startActivityForResult(intent,CROP_PHOTO);//启动裁剪部分
+                }
+                break;
+            case CROP_PHOTO:
+                if(resultCode==RESULT_OK){
+                    Glide .with(MainActivity.this)
+                            .load(imgUri)
+                            .override(250, 350)
+
+                                    //跳过内存缓存
+                            .skipMemoryCache(true)
+
+                                    //跳过硬盘缓存
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+
+                            .centerCrop()
+
+                            .into(iv_show);
+                }
+                break;
+            default:
+                break;
         }
     }
 }
